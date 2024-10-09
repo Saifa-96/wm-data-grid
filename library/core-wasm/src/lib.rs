@@ -8,6 +8,7 @@ pub struct DataGrid {
     row_count: usize,
     col_count: usize,
     cell_properties: Vec<Vec<CellProperty>>,
+    spreadsheet_data: Vec<Vec<String>>,
     cells: Vec<Cell>,
     selected_cell_range: Option<SelectedCellRange>,
 }
@@ -28,6 +29,19 @@ impl DataGrid {
                 text_align: TextAlign::Left,
             },
         );
+
+        let mut spreadsheet_data = Self::create_grid(row_count, col_count, String::new());
+
+        for row in 0..row_count {
+            for col in 0..col_count {
+                if row == 0 && col > 0 {
+                    let number: u32 = col.try_into().unwrap();
+                    spreadsheet_data[row][col] = Self::number_to_column_name(number);
+                } else if row > 0 && col == 0 {
+                    spreadsheet_data[row][col] = row.to_string(); 
+                }
+            }
+        }
 
         let cells = Self::draw_cells(
             row_count,
@@ -50,6 +64,7 @@ impl DataGrid {
             row_heights,
             col_widths,
             cell_properties,
+            spreadsheet_data,
             cells,
             selected_cell_range: Some(range),
         }
@@ -59,6 +74,10 @@ impl DataGrid {
         serde_wasm_bindgen::to_value(&self.cells).unwrap()
     }
 
+    pub fn get_spreadsheet_data (&self) -> JsValue {
+        serde_wasm_bindgen::to_value(&self.spreadsheet_data).unwrap()
+    }
+
     pub fn move_selected_cell(&mut self, direction: Direction) {
         if let Some(range) = &self.selected_cell_range {
             let new_range = match direction {
@@ -66,13 +85,14 @@ impl DataGrid {
                 Direction::DOWN => range.move_down(self.row_count),
                 Direction::LEFT => range.move_left(),
                 Direction::RIGHT => range.move_right(self.col_count),
+                _ => unreachable!(),
             };
 
             self.selected_cell_range = Some(new_range);
         }
     }
 
-    pub fn get_cell(&self) -> JsValue {
+    pub fn get_selected_cell(&self) -> JsValue {
         if let Some(range) = &self.selected_cell_range {
             let mut y = 0;
             for r in 0..range.start_row {
@@ -85,6 +105,8 @@ impl DataGrid {
             }
 
             let cell = Cell {
+                row: range.start_row,
+                col: range.start_col,
                 x,
                 y,
                 width: self.col_widths[range.start_col],
@@ -94,6 +116,19 @@ impl DataGrid {
         } else {
             JsValue::NULL
         }
+    }
+
+    fn number_to_column_name(mut number: u32) -> String {
+        let mut column_name = String::new();
+
+        while number > 0 {
+            let remainder = (number - 1) % 26;
+            let alphabet = char::from_u32(65 + remainder).unwrap();
+            column_name.insert(0, alphabet);
+            number = (number - 1) / 26;
+        }
+
+        column_name
     }
 
     fn draw_cells(
@@ -132,6 +167,8 @@ impl DataGrid {
         }
 
         Cell {
+            row,
+            col,
             x,
             y,
             width: col_widths[col],
@@ -150,6 +187,8 @@ impl DataGrid {
 #[wasm_bindgen]
 #[derive(Serialize, Deserialize)]
 pub struct Cell {
+    pub row: usize,
+    pub col: usize,
     pub x: usize,
     pub y: usize,
     pub width: usize,
@@ -162,11 +201,12 @@ enum TextAlign {
 }
 
 #[wasm_bindgen]
+#[derive(Copy, Clone, Debug)]
 pub enum Direction {
-    UP,
-    DOWN,
-    LEFT,
-    RIGHT,
+    UP = 0,
+    DOWN = 1,
+    LEFT = 2,
+    RIGHT = 3,
 }
 
 #[wasm_bindgen]

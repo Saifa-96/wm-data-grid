@@ -14,7 +14,13 @@ export class Cell {
   free(): void;
 /**
 */
+  col: number;
+/**
+*/
   height: number;
+/**
+*/
+  row: number;
 /**
 */
   width: number;
@@ -42,13 +48,17 @@ export class DataGrid {
 */
   get_cells(): any;
 /**
+* @returns {any}
+*/
+  get_spreadsheet_data(): any;
+/**
 * @param {Direction} direction
 */
   move_selected_cell(direction: Direction): void;
 /**
 * @returns {any}
 */
-  get_cell(): any;
+  get_selected_cell(): any;
 }
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
@@ -58,9 +68,14 @@ export interface InitOutput {
   readonly __wbg_datagrid_free: (a: number, b: number) => void;
   readonly datagrid_new: () => number;
   readonly datagrid_get_cells: (a: number) => number;
+  readonly datagrid_get_spreadsheet_data: (a: number) => number;
   readonly datagrid_move_selected_cell: (a: number, b: number) => void;
-  readonly datagrid_get_cell: (a: number) => number;
+  readonly datagrid_get_selected_cell: (a: number) => number;
   readonly __wbg_cell_free: (a: number, b: number) => void;
+  readonly __wbg_get_cell_row: (a: number) => number;
+  readonly __wbg_set_cell_row: (a: number, b: number) => void;
+  readonly __wbg_get_cell_col: (a: number) => number;
+  readonly __wbg_set_cell_col: (a: number, b: number) => void;
   readonly __wbg_get_cell_x: (a: number) => number;
   readonly __wbg_set_cell_x: (a: number, b: number) => void;
   readonly __wbg_get_cell_y: (a: number) => number;

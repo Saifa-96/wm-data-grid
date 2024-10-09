@@ -201,6 +201,32 @@ export class Cell {
     /**
     * @returns {number}
     */
+    get row() {
+        const ret = wasm.__wbg_get_cell_row(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+    * @param {number} arg0
+    */
+    set row(arg0) {
+        wasm.__wbg_set_cell_row(this.__wbg_ptr, arg0);
+    }
+    /**
+    * @returns {number}
+    */
+    get col() {
+        const ret = wasm.__wbg_get_cell_col(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+    * @param {number} arg0
+    */
+    set col(arg0) {
+        wasm.__wbg_set_cell_col(this.__wbg_ptr, arg0);
+    }
+    /**
+    * @returns {number}
+    */
     get x() {
         const ret = wasm.__wbg_get_cell_x(this.__wbg_ptr);
         return ret >>> 0;
@@ -306,6 +332,13 @@ export class DataGrid {
         return takeObject(ret);
     }
     /**
+    * @returns {any}
+    */
+    get_spreadsheet_data() {
+        const ret = wasm.datagrid_get_spreadsheet_data(this.__wbg_ptr);
+        return takeObject(ret);
+    }
+    /**
     * @param {Direction} direction
     */
     move_selected_cell(direction) {
@@ -314,8 +347,8 @@ export class DataGrid {
     /**
     * @returns {any}
     */
-    get_cell() {
-        const ret = wasm.datagrid_get_cell(this.__wbg_ptr);
+    get_selected_cell() {
+        const ret = wasm.datagrid_get_selected_cell(this.__wbg_ptr);
         return takeObject(ret);
     }
 }
