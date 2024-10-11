@@ -3,23 +3,18 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct DataGrid {
-    row_heights: Vec<usize>,
-    col_widths: Vec<usize>,
-    row_count: usize,
-    col_count: usize,
     cell_properties: Vec<Vec<CellProperty>>,
     spreadsheet_data: Vec<Vec<String>>,
-    cells: Vec<Cell>,
     selected_cell_range: Option<SelectedCellRange>,
+    view_window: ViewWindow,
 }
 
 #[wasm_bindgen]
 impl DataGrid {
     #[wasm_bindgen(constructor)]
-    pub fn new() -> Self {
+    pub fn new(width: usize, height: usize) -> Self {
         let row_count = 100;
         let col_count = 100;
-        let row_heights = vec![26; row_count];
         let col_widths = vec![100; col_count];
 
         let cell_properties = Self::create_grid(
@@ -38,18 +33,10 @@ impl DataGrid {
                     let number: u32 = col.try_into().unwrap();
                     spreadsheet_data[row][col] = Self::number_to_column_name(number);
                 } else if row > 0 && col == 0 {
-                    spreadsheet_data[row][col] = row.to_string(); 
+                    spreadsheet_data[row][col] = row.to_string();
                 }
             }
         }
-
-        let cells = Self::draw_cells(
-            row_count,
-            col_count,
-            // &cell_properties,
-            &row_heights,
-            &col_widths,
-        );
 
         let range = SelectedCellRange {
             start_row: 0,
@@ -58,64 +45,43 @@ impl DataGrid {
             end_col: 0,
         };
 
+        let view_window = ViewWindow::new(width, height, row_count, col_count, col_widths, 26);
+
         Self {
-            row_count,
-            col_count,
-            row_heights,
-            col_widths,
             cell_properties,
             spreadsheet_data,
-            cells,
             selected_cell_range: Some(range),
+            view_window,
         }
     }
 
-    pub fn get_cells(&self) -> JsValue {
-        serde_wasm_bindgen::to_value(&self.cells).unwrap()
+    pub fn get_grid(&self, start_row_idx: usize, start_col_idx: usize) -> JsValue {
+        let row_idx_vec = self.view_window.get_visible_row_idx_vec(start_row_idx);
+        let col_idx_vec = self.view_window.get_visible_col_idx_vec(start_col_idx);
+        let mut grid: Vec<Vec<Cell>> = vec![];
+
+        for row_idx in row_idx_vec {
+            let row_cells: Vec<Cell> = col_idx_vec
+                .iter()
+                .map(|&col_idx| {
+                    let cell = Cell {
+                        row: row_idx,
+                        col: col_idx,
+                        width: self.view_window.col_widths[col_idx],
+                    };
+
+                    cell
+                })
+                .collect();
+
+            grid.push(row_cells);
+        }
+
+        serde_wasm_bindgen::to_value(&grid).unwrap()
     }
 
-    pub fn get_spreadsheet_data (&self) -> JsValue {
+    pub fn get_spreadsheet_data(&self) -> JsValue {
         serde_wasm_bindgen::to_value(&self.spreadsheet_data).unwrap()
-    }
-
-    pub fn move_selected_cell(&mut self, direction: Direction) {
-        if let Some(range) = &self.selected_cell_range {
-            let new_range = match direction {
-                Direction::UP => range.move_up(),
-                Direction::DOWN => range.move_down(self.row_count),
-                Direction::LEFT => range.move_left(),
-                Direction::RIGHT => range.move_right(self.col_count),
-                _ => unreachable!(),
-            };
-
-            self.selected_cell_range = Some(new_range);
-        }
-    }
-
-    pub fn get_selected_cell(&self) -> JsValue {
-        if let Some(range) = &self.selected_cell_range {
-            let mut y = 0;
-            for r in 0..range.start_row {
-                y += self.row_heights[r];
-            }
-
-            let mut x = 0;
-            for c in 0..range.start_col {
-                x += self.col_widths[c];
-            }
-
-            let cell = Cell {
-                row: range.start_row,
-                col: range.start_col,
-                x,
-                y,
-                width: self.col_widths[range.start_col],
-                height: self.row_heights[range.start_row],
-            };
-            serde_wasm_bindgen::to_value(&cell).unwrap()
-        } else {
-            JsValue::NULL
-        }
     }
 
     fn number_to_column_name(mut number: u32) -> String {
@@ -131,51 +97,6 @@ impl DataGrid {
         column_name
     }
 
-    fn draw_cells(
-        row_count: usize,
-        col_count: usize,
-        // cell_properties: &Vec<Vec<CellProperty>>,
-        row_heights: &Vec<usize>,
-        col_widths: &Vec<usize>,
-    ) -> Vec<Cell> {
-        let mut cells = vec![];
-
-        for row in 0..row_count {
-            for col in 0..col_count {
-                let cell = Self::draw_single_cell(row, col, row_heights, col_widths);
-                cells.push(cell);
-            }
-        }
-
-        cells
-    }
-
-    fn draw_single_cell(
-        row: usize,
-        col: usize,
-        row_heights: &Vec<usize>,
-        col_widths: &Vec<usize>,
-    ) -> Cell {
-        let mut y = 0;
-        for r in 0..row {
-            y += row_heights[r];
-        }
-
-        let mut x = 0;
-        for c in 0..col {
-            x += col_widths[c];
-        }
-
-        Cell {
-            row,
-            col,
-            x,
-            y,
-            width: col_widths[col],
-            height: row_heights[row],
-        }
-    }
-
     fn create_grid<T>(row_count: usize, col_count: usize, default_value: T) -> Vec<Vec<T>>
     where
         T: Clone,
@@ -189,10 +110,7 @@ impl DataGrid {
 pub struct Cell {
     pub row: usize,
     pub col: usize,
-    pub x: usize,
-    pub y: usize,
     pub width: usize,
-    pub height: usize,
 }
 
 #[derive(Clone)]
@@ -266,4 +184,70 @@ impl SelectedCellRange {
             end_col: col,
         }
     }
+}
+
+struct ViewWindow {
+    width: usize,
+    height: usize,
+    row_count: usize,
+    col_count: usize,
+    col_widths: Vec<usize>,
+    visible_row_count: usize,
+    fixed_row: usize,
+    fixed_col: usize,
+}
+
+impl ViewWindow {
+    fn new(
+        width: usize,
+        height: usize,
+        row_count: usize,
+        col_count: usize,
+        col_widths: Vec<usize>,
+        row_height: usize,
+    ) -> Self {
+        let visible_row_count = (height / row_height) + 1;
+
+        Self {
+            width,
+            height,
+            row_count,
+            col_count,
+            col_widths,
+            visible_row_count,
+            fixed_row: 0,
+            fixed_col: 0,
+        }
+    }
+
+    fn get_visible_col_idx_vec(&self, start_col: usize) -> Vec<usize> {
+        let mut col_idx: usize = start_col.max(self.fixed_col + 1);
+        let mut visible_col_idx = gen_vec(0, self.fixed_col + 1);
+        let mut content_width: usize = visible_col_idx.iter().fold(0, |acc, &idx| {
+            let width = self.col_widths[idx];
+            acc + width
+        });
+
+        while content_width < self.width {
+            content_width += self.col_widths[col_idx];
+            visible_col_idx.push(col_idx);
+            col_idx += 1;
+        }
+
+        visible_col_idx
+    }
+
+    fn get_visible_row_idx_vec(&self, start_row: usize) -> Vec<usize> {
+        let mut idx_vec = gen_vec(0, self.fixed_row + 1);
+        let rest_idx_vec = gen_vec(
+            start_row.max(self.fixed_row + 1),
+            self.visible_row_count - idx_vec.len(),
+        );
+        idx_vec.extend(rest_idx_vec);
+        idx_vec
+    }
+}
+
+fn gen_vec(start: usize, length: usize) -> Vec<usize> {
+    (0..length).map(|x| x + start).collect()
 }

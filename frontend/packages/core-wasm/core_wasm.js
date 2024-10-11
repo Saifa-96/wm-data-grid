@@ -227,32 +227,6 @@ export class Cell {
     /**
     * @returns {number}
     */
-    get x() {
-        const ret = wasm.__wbg_get_cell_x(this.__wbg_ptr);
-        return ret >>> 0;
-    }
-    /**
-    * @param {number} arg0
-    */
-    set x(arg0) {
-        wasm.__wbg_set_cell_x(this.__wbg_ptr, arg0);
-    }
-    /**
-    * @returns {number}
-    */
-    get y() {
-        const ret = wasm.__wbg_get_cell_y(this.__wbg_ptr);
-        return ret >>> 0;
-    }
-    /**
-    * @param {number} arg0
-    */
-    set y(arg0) {
-        wasm.__wbg_set_cell_y(this.__wbg_ptr, arg0);
-    }
-    /**
-    * @returns {number}
-    */
     get width() {
         const ret = wasm.__wbg_get_cell_width(this.__wbg_ptr);
         return ret >>> 0;
@@ -262,19 +236,6 @@ export class Cell {
     */
     set width(arg0) {
         wasm.__wbg_set_cell_width(this.__wbg_ptr, arg0);
-    }
-    /**
-    * @returns {number}
-    */
-    get height() {
-        const ret = wasm.__wbg_get_cell_height(this.__wbg_ptr);
-        return ret >>> 0;
-    }
-    /**
-    * @param {number} arg0
-    */
-    set height(arg0) {
-        wasm.__wbg_set_cell_height(this.__wbg_ptr, arg0);
     }
 }
 
@@ -317,18 +278,22 @@ export class DataGrid {
         wasm.__wbg_datagrid_free(ptr, 0);
     }
     /**
+    * @param {number} width
+    * @param {number} height
     */
-    constructor() {
-        const ret = wasm.datagrid_new();
+    constructor(width, height) {
+        const ret = wasm.datagrid_new(width, height);
         this.__wbg_ptr = ret >>> 0;
         DataGridFinalization.register(this, this.__wbg_ptr, this);
         return this;
     }
     /**
+    * @param {number} start_row_idx
+    * @param {number} start_col_idx
     * @returns {any}
     */
-    get_cells() {
-        const ret = wasm.datagrid_get_cells(this.__wbg_ptr);
+    get_grid(start_row_idx, start_col_idx) {
+        const ret = wasm.datagrid_get_grid(this.__wbg_ptr, start_row_idx, start_col_idx);
         return takeObject(ret);
     }
     /**
@@ -336,19 +301,6 @@ export class DataGrid {
     */
     get_spreadsheet_data() {
         const ret = wasm.datagrid_get_spreadsheet_data(this.__wbg_ptr);
-        return takeObject(ret);
-    }
-    /**
-    * @param {Direction} direction
-    */
-    move_selected_cell(direction) {
-        wasm.datagrid_move_selected_cell(this.__wbg_ptr, direction);
-    }
-    /**
-    * @returns {any}
-    */
-    get_selected_cell() {
-        const ret = wasm.datagrid_get_selected_cell(this.__wbg_ptr);
         return takeObject(ret);
     }
 }

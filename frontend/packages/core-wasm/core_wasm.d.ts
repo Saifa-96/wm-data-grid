@@ -17,19 +17,10 @@ export class Cell {
   col: number;
 /**
 */
-  height: number;
-/**
-*/
   row: number;
 /**
 */
   width: number;
-/**
-*/
-  x: number;
-/**
-*/
-  y: number;
 }
 /**
 */
@@ -41,24 +32,20 @@ export class CellProperty {
 export class DataGrid {
   free(): void;
 /**
+* @param {number} width
+* @param {number} height
 */
-  constructor();
+  constructor(width: number, height: number);
 /**
+* @param {number} start_row_idx
+* @param {number} start_col_idx
 * @returns {any}
 */
-  get_cells(): any;
+  get_grid(start_row_idx: number, start_col_idx: number): any;
 /**
 * @returns {any}
 */
   get_spreadsheet_data(): any;
-/**
-* @param {Direction} direction
-*/
-  move_selected_cell(direction: Direction): void;
-/**
-* @returns {any}
-*/
-  get_selected_cell(): any;
 }
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
@@ -66,24 +53,16 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
   readonly __wbg_datagrid_free: (a: number, b: number) => void;
-  readonly datagrid_new: () => number;
-  readonly datagrid_get_cells: (a: number) => number;
+  readonly datagrid_new: (a: number, b: number) => number;
+  readonly datagrid_get_grid: (a: number, b: number, c: number) => number;
   readonly datagrid_get_spreadsheet_data: (a: number) => number;
-  readonly datagrid_move_selected_cell: (a: number, b: number) => void;
-  readonly datagrid_get_selected_cell: (a: number) => number;
   readonly __wbg_cell_free: (a: number, b: number) => void;
   readonly __wbg_get_cell_row: (a: number) => number;
   readonly __wbg_set_cell_row: (a: number, b: number) => void;
   readonly __wbg_get_cell_col: (a: number) => number;
   readonly __wbg_set_cell_col: (a: number, b: number) => void;
-  readonly __wbg_get_cell_x: (a: number) => number;
-  readonly __wbg_set_cell_x: (a: number, b: number) => void;
-  readonly __wbg_get_cell_y: (a: number) => number;
-  readonly __wbg_set_cell_y: (a: number, b: number) => void;
   readonly __wbg_get_cell_width: (a: number) => number;
   readonly __wbg_set_cell_width: (a: number, b: number) => void;
-  readonly __wbg_get_cell_height: (a: number) => number;
-  readonly __wbg_set_cell_height: (a: number, b: number) => void;
   readonly __wbg_cellproperty_free: (a: number, b: number) => void;
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
