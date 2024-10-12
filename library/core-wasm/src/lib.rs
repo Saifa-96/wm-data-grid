@@ -3,6 +3,8 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct DataGrid {
+    cur_row: usize,
+    cur_col: usize,
     cell_properties: Vec<Vec<CellProperty>>,
     spreadsheet_data: Vec<Vec<String>>,
     selected_cell_range: Option<SelectedCellRange>,
@@ -48,6 +50,8 @@ impl DataGrid {
         let view_window = ViewWindow::new(width, height, row_count, col_count, col_widths, 26);
 
         Self {
+            cur_row: 0,
+            cur_col: 0,
             cell_properties,
             spreadsheet_data,
             selected_cell_range: Some(range),
@@ -55,28 +59,30 @@ impl DataGrid {
         }
     }
 
-    pub fn get_grid(&self, start_row_idx: usize, start_col_idx: usize) -> JsValue {
-        let row_idx_vec = self.view_window.get_visible_row_idx_vec(start_row_idx);
-        let col_idx_vec = self.view_window.get_visible_col_idx_vec(start_col_idx);
-        let mut grid: Vec<Vec<Cell>> = vec![];
+    pub fn vertical_move(&mut self, step: isize) {
+        self.view_window.vertical_move(step);
+    }
 
+    pub fn horizontal_move(&mut self, step: isize) {
+        self.view_window.horizontal_move(step);
+    }
+
+    pub fn get_grid(&self) -> JsValue {
+        let row_idx_vec = self.view_window.get_visible_row_idx_vec();
+        let col_idx_vec = self.view_window.get_visible_col_idx_vec();
+
+        let mut grid: Vec<Vec<Cell>> = vec![];
         for row_idx in row_idx_vec {
             let row_cells: Vec<Cell> = col_idx_vec
                 .iter()
-                .map(|&col_idx| {
-                    let cell = Cell {
-                        row: row_idx,
-                        col: col_idx,
-                        width: self.view_window.col_widths[col_idx],
-                    };
-
-                    cell
+                .map(|&col_idx| Cell {
+                    row: row_idx,
+                    col: col_idx,
                 })
                 .collect();
 
             grid.push(row_cells);
         }
-
         serde_wasm_bindgen::to_value(&grid).unwrap()
     }
 
@@ -110,7 +116,6 @@ impl DataGrid {
 pub struct Cell {
     pub row: usize,
     pub col: usize,
-    pub width: usize,
 }
 
 #[derive(Clone)]
@@ -195,6 +200,8 @@ struct ViewWindow {
     visible_row_count: usize,
     fixed_row: usize,
     fixed_col: usize,
+    cur_row: usize,
+    cur_col: usize,
 }
 
 impl ViewWindow {
@@ -217,34 +224,53 @@ impl ViewWindow {
             visible_row_count,
             fixed_row: 0,
             fixed_col: 0,
+            cur_row: 1,
+            cur_col: 1,
         }
     }
 
-    fn get_visible_col_idx_vec(&self, start_col: usize) -> Vec<usize> {
-        let mut col_idx: usize = start_col.max(self.fixed_col + 1);
+    fn vertical_move(&mut self, step: isize) {
+        let row_idx = self.cur_row as isize;
+        self.cur_row = (row_idx + step).try_into().unwrap_or(0).clamp(
+            self.fixed_row + 1,
+            self.row_count - self.visible_row_count + 2,
+        );
+    }
+
+    fn horizontal_move(&mut self, step: isize) {
+        let col_idx = self.cur_col as isize;
+        self.cur_col = (col_idx + step)
+            .try_into()
+            .unwrap_or(0)
+            .clamp(self.fixed_col + 1, self.col_count);
+    }
+
+    fn get_visible_row_idx_vec(&self) -> Vec<usize> {
+        let row_idx = self.cur_row;
+        let mut idx_vec = gen_vec(0, self.fixed_row + 1);
+        let rest_idx_vec = gen_vec(
+            row_idx,
+            (self.visible_row_count - idx_vec.len()).min(self.row_count - row_idx),
+        );
+        idx_vec.extend(rest_idx_vec);
+        idx_vec
+    }
+
+    fn get_visible_col_idx_vec(&self) -> Vec<usize> {
+        let mut col_idx = self.cur_col;
         let mut visible_col_idx = gen_vec(0, self.fixed_col + 1);
         let mut content_width: usize = visible_col_idx.iter().fold(0, |acc, &idx| {
             let width = self.col_widths[idx];
             acc + width
         });
 
-        while content_width < self.width {
+        while col_idx < self.col_count && content_width < self.width {
             content_width += self.col_widths[col_idx];
             visible_col_idx.push(col_idx);
             col_idx += 1;
         }
 
         visible_col_idx
-    }
-
-    fn get_visible_row_idx_vec(&self, start_row: usize) -> Vec<usize> {
-        let mut idx_vec = gen_vec(0, self.fixed_row + 1);
-        let rest_idx_vec = gen_vec(
-            start_row.max(self.fixed_row + 1),
-            self.visible_row_count - idx_vec.len(),
-        );
-        idx_vec.extend(rest_idx_vec);
-        idx_vec
     }
 }
 
