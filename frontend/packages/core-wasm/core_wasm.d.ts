@@ -18,9 +18,6 @@ export class Cell {
 /**
 */
   row: number;
-/**
-*/
-  width: number;
 }
 /**
 */
@@ -37,11 +34,23 @@ export class DataGrid {
 */
   constructor(width: number, height: number);
 /**
-* @param {number} start_row_idx
-* @param {number} start_col_idx
+* @param {number} step
+*/
+  vertical_move(step: number): void;
+/**
+* @param {number} step
+*/
+  horizontal_move(step: number): void;
+/**
+* @param {number} row
+* @param {number} col
+* @param {string} value
+*/
+  update_cell_data(row: number, col: number, value: string): void;
+/**
 * @returns {any}
 */
-  get_grid(start_row_idx: number, start_col_idx: number): any;
+  get_grid(): any;
 /**
 * @returns {any}
 */
@@ -54,15 +63,16 @@ export interface InitOutput {
   readonly memory: WebAssembly.Memory;
   readonly __wbg_datagrid_free: (a: number, b: number) => void;
   readonly datagrid_new: (a: number, b: number) => number;
-  readonly datagrid_get_grid: (a: number, b: number, c: number) => number;
+  readonly datagrid_vertical_move: (a: number, b: number) => void;
+  readonly datagrid_horizontal_move: (a: number, b: number) => void;
+  readonly datagrid_update_cell_data: (a: number, b: number, c: number, d: number, e: number) => void;
+  readonly datagrid_get_grid: (a: number) => number;
   readonly datagrid_get_spreadsheet_data: (a: number) => number;
   readonly __wbg_cell_free: (a: number, b: number) => void;
   readonly __wbg_get_cell_row: (a: number) => number;
   readonly __wbg_set_cell_row: (a: number, b: number) => void;
   readonly __wbg_get_cell_col: (a: number) => number;
   readonly __wbg_set_cell_col: (a: number, b: number) => void;
-  readonly __wbg_get_cell_width: (a: number) => number;
-  readonly __wbg_set_cell_width: (a: number, b: number) => void;
   readonly __wbg_cellproperty_free: (a: number, b: number) => void;
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;

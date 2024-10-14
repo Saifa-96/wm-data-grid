@@ -67,6 +67,10 @@ impl DataGrid {
         self.view_window.horizontal_move(step);
     }
 
+    pub fn update_cell_data(&mut self, row: usize, col: usize, value: String) {
+        self.spreadsheet_data[row][col] = value;
+    }
+
     pub fn get_grid(&self) -> JsValue {
         let row_idx_vec = self.view_window.get_visible_row_idx_vec();
         let col_idx_vec = self.view_window.get_visible_col_idx_vec();
