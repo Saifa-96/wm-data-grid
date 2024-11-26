@@ -1,6 +1,6 @@
 import { faker } from "@faker-js/faker";
 
-interface Column {
+export interface Column {
   name: string;
   width: number;
 }
@@ -50,10 +50,11 @@ function genUserItem() {
     gender: faker.person.sexType(),
     phone: faker.phone.number(),
     email: faker.internet.email(),
-    birthday: faker.date.birthdate(),
-    createTime: faker.date.anytime(),
+    birthday: faker.date.birthdate().toDateString(),
+    createTime: faker.date.anytime().toDateString(),
   };
 }
+export type DataItem = Record<string, string>;
 
 export function genData() {
   return Array(100).fill(null).map(genUserItem);
