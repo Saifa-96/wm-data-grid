@@ -33,6 +33,10 @@ io.on("connection", (socket) => {
     const { rows, total } = ot.getDataByPage(payload.page);
     io.emit("next-page", { rows, total });
   });
+
+  socket.on('send-operation', (payload) => {
+    const { operation } = payload;
+  })
 });
 
 server.listen(3009, () => {

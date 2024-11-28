@@ -10,9 +10,16 @@ export interface Operation {
 
 // apply(a, b) = apply(b, a)
 export function transform(op1: Operation, op2: Operation): Operation {
-  let { cell, range, row, col } = op1;
+  const { cell, range, row, col } = op1;
+  const newOp: Operation = {};
   if (cell && cell.length > 0) {
-    cell = cell.map((change) => {});
+    newOp.cell = cell
+      .map((change) => transformCell(change, op2))
+      .filter((item) => !!item);
+  }
+
+  if (range && range.length > 0) {
+    newOp.range = range.map(change => )
   }
 }
 
@@ -45,4 +52,12 @@ function transformCell(
       () => null
     )
     .otherwise(() => cellChange);
+}
+
+function transformRange(rangeChange: opType.RangeCellsChange, op: Operation): opType.RangeCellsChange {
+    const { cell,  range, row, col} = op;
+    const newChange = {...rangeChange}
+    if (cell && cell.length > 0) {
+        
+    }
 }
