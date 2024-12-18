@@ -4,26 +4,29 @@ export interface SingleCellChange {
   value: string;
 }
 
-export interface RangeCellsChange {
-  colNames: string[];
-  rowIds: string[];
-  values: string[][];
-}
+// export interface RangeCellsChange {
+//   colNames: string[];
+//   rowIds: string[];
+//   values: string[][];
+// }
+
+export type RowChange = DeleteRow | InsertRow;
+
+export type ColChange = DeleteCol | InsertCol;
 
 export interface DeleteRow {
-  deleteRowId: string;
+  rowId: string
 }
 
 export interface InsertRow {
-  prevRowId?: string;
-  data: unknown;
+  data: Record<string, unknown>;
 }
 
 export interface DeleteCol {
-  deleteColName: string;
+  colId: string
 }
 
 export interface InsertCol {
-  prevColName?: string;
+  prevColId: string | null;
   colName: string;
 }
