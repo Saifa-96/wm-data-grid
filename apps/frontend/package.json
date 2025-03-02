@@ -30,14 +30,15 @@
     "react": "^18",
     "react-dom": "^18",
     "react-hook-form": "^7.54.2",
+    "react-json-view-lite": "^2.3.0",
     "socket.io-client": "^4.8.1",
     "sql.js": "^1.12.0",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "ts-pattern": "^5.6.0",
     "zod": "3.24.2",
-    "operational-transformation": "workspace:*",
-    "sql-store": "workspace:*"
+    "sql-store": "workspace:*",
+    "operational-transformation": "workspace:*"
   },
   "devDependencies": {
     "@faker-js/faker": "^9.0.2",
